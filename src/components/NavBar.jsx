@@ -29,7 +29,7 @@ export default function NavBar(props) {
             <nav className="py-3 px-4 navbar sticky-top">
                 <div className="container-fluid">
                     <div className="float-md-start ">
-                        <a role="button" className="btn btn-outline-light custom" href="https://github.com/gbdelgado">
+                        <a role="button" className="btn btn-outline-light custom" href="https://github.com/gbdelgado/Not-Stem-Player">
                             <h3>
                                 Not Stem Player
 
