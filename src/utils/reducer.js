@@ -8,17 +8,14 @@ export const reducer = (state, action) => {
                 modal: !state.modal
             }
         case 'SET_SOUNDS':
-            // first check if we need to purge any sounds from filestacker
-            if(state.sounds.length > 0) {
-                purgeSounds(state.sounds);
-            }
             // set the state with the new sounds and the modal to false
             // also well call the songname the first name of the file uploaded
             return {
                 ...state,
                 modal: false,
-                sounds: action.payload,
-                songName: action.payload[0].name,
+                sounds: action.payload.sounds,
+                songName: action.payload.sounds[0].name,
+                manager: action.payload.manager
             };
 
         default:
@@ -29,5 +26,6 @@ export const reducer = (state, action) => {
 export const initialState = {
     songName: "No Song Selected",
     modal: false,
-    sounds: []
+    sounds: [],
+    manager: null
 }

@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../utils/context';
+import { useInterval } from '../utils/utils';
 
 /**
  * Scrubber to show song progress. I might add it back in the program if i get
@@ -9,42 +10,63 @@ import { UserContext } from '../utils/context';
  */
 export default function Scrubber(props) {
     const [state] = useContext(UserContext);
-    const [currInterval, setCurrInterval] = useState(null);
+    const [play, setPlay] = useState(false);
+    const [polling, setPolling] = useState(null);
+    const [progress, setProgress] = useState(0);
 
-    const [duration, setDuration] = useState(0);
-    const [place, setPlace] = useState(0);
+    // any change in the sounds should reset everything here
+    useEffect(() => {
+        setProgress(0);
+        setPolling(null);
+        setPlay(false);
+    }, [state.sounds])
 
-    const checkInterval = () => {
-        //also check to see if the duration has loaded
-        if (duration === 0) {
-            setDuration(state.sounds[0].howl.duration());
+    // an interval for polling while the stong is playing
+    useInterval(() => {
+        if (state.manager.getProgress() >= 100) {
+            // clear the interval if the song is over
+            setPolling(null);
+            setProgress(0);
+            setPlay(false);
+            state.manager.stop();
+        } else {
+            // otherwise set the new progress
+            setProgress(state.manager.getProgress());
         }
-        setPlace(state.sounds[0].howl.seek());
+    }, polling);
+
+    const handleClick = () => {
+        if (state.manager) {
+            // toggle the manager and the button
+            state.manager.toggle();
+            setPlay(!play);
+            // start polling every 20ms
+            setPolling(20);
+        }
     }
 
-    useEffect(() => {
-        if (state.sounds.length > 0) {
-            // start playing the new sounds
-            state.sounds.forEach((sound) => sound.howl.play());
-            // set any previous intervals to null
-            if (currInterval) {
-                clearInterval(currInterval);
-            }
-            // start a new interval to poll the sound duration
-            setCurrInterval(setInterval(() => checkInterval(), 60));
-        }
-    }, [state.sounds]);
-
-
     return (
-        <div className="progress">
-            <div
-                className="progress-bar bg-dark shadow progress-bar-striped progress-bar-animated"
-                role="progressbar"
-                aria-valuenow={place}
-                aria-valuemin="0"
-                aria-valuemax={duration}
-                style={{ width: `${(place / duration).toFixed(3) * 100}%` }} />
+        <div className="row align-items-center">
+            <div className="col-3 d-grid">
+                <button
+                    type="button"
+                    className="btn-outline-light btn"
+                    onClick={handleClick}>
+                    {play ? 'Pause' : 'Play'}
+                </button>
+            </div>
+            <div className="col-9">
+
+                <div className="progress">
+                    <div
+                        className="progress-bar bg-dark shadow progress-bar-striped progress-bar-animated"
+                        role="progressbar"
+                        aria-valuenow={progress}
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        style={{ width: `${progress}%` }} />
+                </div>
+            </div>
         </div>
     )
 }

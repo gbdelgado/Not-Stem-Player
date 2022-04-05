@@ -1,4 +1,5 @@
-import { Howl} from 'howler';
+import AudioManager from './AudioManager';
+import { useEffect, useRef } from 'react';
 const fileStacker = require('filestack-js').init(process.env.REACT_APP_FILESTACK_KEY);
 const SECURITY_POLICY = {
     signature: process.env.REACT_APP_FILESTACK_SIGNATURE,
@@ -16,19 +17,34 @@ export async function uploadFiles(files) {
         // we only care about the handles and src and filename, so lets format and
         // put them in the state
         console.log(resp);
-        const sounds = resp.map((file) => {
+        return resp.map((file) => {
             return {
                 src: file.url,
                 handle: file.handle,
                 name: file.name
             }
         });
-        return createSounds(sounds);
 
     } catch (e) {
         console.log(e);
         return;
     }
+}
+
+export async function createManager(sounds, prevManager) {
+    // fire the old manager
+    if(prevManager) {
+        // an old manager means we also have old sounds so purge those
+        purgeSounds(sounds);
+        prevManager.stop();
+        prevManager.dispose();
+    }
+    // create the audio manager
+    const manager = new AudioManager(sounds);
+    // load in the sounds
+    await manager.init();
+    // return the state with the sounds and the manager
+    return manager;
 }
 
 /**
@@ -37,30 +53,9 @@ export async function uploadFiles(files) {
  */
 export function purgeSounds(sounds) {
     sounds.forEach((sound) => {
-        // stop the howls from playing
-        sound.howl.stop();
         fileStacker.remove(sound.handle, SECURITY_POLICY);
     })
 }
-
-/**
- * Adds the howl objects to the sounds array
- * @param {*} sounds 
- * @returns 
- */
-export function createSounds(sounds) {
-    // add the howls to each sound in sounds
-    return sounds.map((sound) => {
-        return {
-            ...sound,
-            howl: new Howl({
-                src: [sound.src],
-                html5: true
-            })
-        };
-    })
-}
-
 
 /**
  * lil debounce function
@@ -74,4 +69,25 @@ export function debounce(func, timeout = 400) {
         clearTimeout(timer);
         timer = setTimeout(() => { func.apply(this, args); }, timeout);
     };
+}
+
+// Creds: https://overreacted.io/making-setinterval-declarative-with-react-hooks/
+export function useInterval(callback, delay) {
+    const savedCallback = useRef();
+
+    // Remember the latest callback.
+    useEffect(() => {
+        savedCallback.current = callback;
+    }, [callback]);
+
+    // Set up the interval.
+    useEffect(() => {
+        function tick() {
+            savedCallback.current();
+        }
+        if (delay !== null) {
+            let id = setInterval(tick, delay);
+            return () => clearInterval(id);
+        }
+    }, [delay]);
 }

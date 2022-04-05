@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../utils/context';
 
 /**
@@ -9,23 +9,29 @@ import { UserContext } from '../utils/context';
 export default function VolumeSlider(props) {
     const [state] = useContext(UserContext);
     const [volume, setVolume] = useState(1);
+    const [disabled, setDisabled] = useState(true);
+
+    useEffect(() => {
+        // check to see if the sound is actually loaded
+        if(!state.sounds[props.idx]) {
+            setDisabled(true);
+        } else {
+            setDisabled(false);
+        }
+    }, [state.sounds]);
 
     /**
-     * Sets the visual and howler volume. Here the prop id will bind the 
-     * track to the slider. Ex. if the id is 0 this will correspond to the
-     * 0th indexed track in the state.sounds array.
-     * @param {Event} e 
+     * sets the the value of the volume slider visually as well as tells
+     * the sound manager too aswell. the min is -70dB and the max is 0dB
+     * because digital sound is wack
+     * @param {UIEvent} e 
      */
     const handleChange = (e) => {
-        // set the visual volume
         setVolume(e.target.value);
-        // only set the howler volume if we have a sound
-        if(state.sounds[props.id]) {
-            // set the actual howler volume
-            state.sounds[props.id].howl.volume([e.target.value]);
-        }
+        // tell the manager to update this track
+        state.manager.setVolume(props.idx, e.target.value);
     }
- 
+    
     return (
         <div className="row gx-auto">
             <div className="col-6 align-items-start">
@@ -34,10 +40,11 @@ export default function VolumeSlider(props) {
                     className='volume-slider'
                     orient="vertical"
                     type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
+                    min="-70"
+                    max="0"
+                    step="5"
                     value={volume}
+                    disabled={disabled}
                     onChange={handleChange} />
             </div>
             <div className="col-6 align-items-end">
