@@ -1,6 +1,6 @@
 import React, { useContext, createRef, useState } from 'react';
 import { UserContext } from '../utils/context';
-import { createManager, uploadFiles } from '../utils/utils';
+import { readFile } from '../utils/utils';
 
 
 export default function UploadModal(props) {
@@ -44,14 +44,20 @@ export default function UploadModal(props) {
                 showError(null);
                 // set the state to loading
                 setLoading(true);
-                // upload and get the handle information as well as the audio manager
-                const sounds = await uploadFiles(inputRef.current.files);
-                // create the new manager, handing in the old one to fire
-                const manager = await createManager(sounds, state.manager);
-                // stop loading
+                const sounds = [];
+
+                for (let file of inputRef.current.files) {
+                    const src = await readFile(file);
+                    sounds.push({
+                        name: file.name,
+                        src
+                    });
+                };
+
+                state.manager.loadTracks(sounds);
+
+                dispatch({ type: 'SET_SOUNDS', payload: { sounds } });
                 setLoading(false);
-                // set the new sounds to the state
-                dispatch({ type: 'SET_SOUNDS', payload: {sounds, manager} });
             }
         } else {
             console.log('tf ??');

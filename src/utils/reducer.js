@@ -1,4 +1,4 @@
-import { purgeSounds } from "./utils";
+import AudioManager from "./AudioManager";
 
 export const reducer = (state, action) => {
     switch (action.type) {
@@ -14,8 +14,7 @@ export const reducer = (state, action) => {
                 ...state,
                 modal: false,
                 sounds: action.payload.sounds,
-                songName: action.payload.sounds[0].name,
-                manager: action.payload.manager
+                songName: action.payload.sounds[0].name
             };
 
         default:
@@ -27,5 +26,5 @@ export const initialState = {
     songName: "No Song Selected",
     modal: false,
     sounds: [],
-    manager: null
+    manager: new AudioManager()
 }
