@@ -1,15 +1,15 @@
 import * as Tone from 'tone';
-
+Tone.Transport.debug = true;
 /**
  * Class to manage audio synchronization
  */
 export default class AudioManager {
-    constructor(tracks) {
-        this.tracks = tracks;
+    constructor() {
         // this will represent the actual audio buffers set in init
-        this.players = null;
+        this.players = [];
         // this will represent the duration of the song
         this.duration = null;
+        this.tracks = [];
     }
 
     /**
@@ -39,11 +39,26 @@ export default class AudioManager {
     }
 
     /**
-     * Returns true if the transport is playing anything
-     * @returns 
+     * Loads in the tracks
+     * @param {*[]} tracks 
      */
-    getState() {
-        return Tone.Transport.state;
+    async loadTracks(tracks) {
+        this.stop();
+        // unload all of the old tracks
+        if (this.players.length > 0) {
+            this.players.forEach((player) => {
+                player.stop();
+                player.dispose();
+            })
+        }
+
+        // load in the new tracks
+        this.tracks = tracks;
+        await this.init();
+    }
+
+    isEmpty() {
+        return this.tracks.length <= 0;
     }
 
     /**
@@ -65,21 +80,8 @@ export default class AudioManager {
      * Toggles the transport on and off
      */
     toggle() {
+        console.log(Tone.Transport.state);
         Tone.Transport.toggle();
-    }
-
-    /**
-     * Cleans up eveyything including the buffers, should only be used
-     * when the manager is done
-     */
-    dispose() {
-        this.players.forEach((player) => {
-            player.stop();
-            player.dispose();
-        });
-        console.log(Tone.getContext().state);
-        Tone.getContext().dispose();
-        console.log(Tone.getContext().state);
     }
 
     /**

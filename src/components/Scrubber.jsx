@@ -36,7 +36,7 @@ export default function Scrubber(props) {
     }, polling);
 
     const handleClick = () => {
-        if (state.manager) {
+        if (!state.manager.isEmpty()) {
             // toggle the manager and the button
             state.manager.toggle();
             setPlay(!play);
